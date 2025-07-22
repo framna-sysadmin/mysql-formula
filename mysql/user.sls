@@ -52,9 +52,6 @@ include:
     {%- else %}
       - allow_passwordless: True
     {%- endif %}
-    {%- if user['unix_socket'] is defined and user['unix_socket'] == True %}
-      - unix_socket: True
-    {%- endif %}
   {%- else %}
     mysql_user.absent:
       - name: {{ name }}
