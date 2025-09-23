@@ -11,7 +11,7 @@ mysql-script-backup-config:
     - name: /etc/{{ mysql.backupcmd }}-tables.conf
     - user: root
     - group: root
-    - mode: 644
+    - mode: '0644'
     - template: jinja
     - contents: |
         {% for table in mysql.backup.tables -%}
@@ -24,7 +24,7 @@ mysql-script-backup:
     - name: /usr/local/bin/db_backup
     - user: root
     - group: root
-    - mode: 755
+    - mode: '0755'
     - source: salt://mysql/files/backup.sh
     - template: jinja
     - defaults:
@@ -36,7 +36,7 @@ mysql-script-backup-logdir:
     - name: {{ mysql.backup.log_dir }}
     - user: root
     - group: root
-    - mode: 755
+    - mode: '0755'
 
 mysql-script-backup-cronjob:
   cron.present:
