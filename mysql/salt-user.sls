@@ -1,6 +1,3 @@
-include:
-  - .server
-
 {%- set os_family = salt['grains.get']('os_family', None) %}
 {%- set mysql_salt_user = salt['pillar.get']('mysql:salt_user:salt_user_name', 'salt') %}
 {%- set mysql_salt_pass = salt['pillar.get']('mysql:salt_user:salt_user_password', salt['grains.get']('server_id')) %}
@@ -13,6 +10,8 @@ include:
 {%- set mysql_host = salt['pillar.get']('mysql:server:host', 'localhost') %}
 {%- if mysql_host == 'localhost' %}
 {%- set host = 'localhost' %}
+include:
+  - .server
 {%- else %}
 {%- set host = grains['fqdn'] %}
 {%- endif %}
