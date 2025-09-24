@@ -14,6 +14,8 @@ include:
   - .server
 {%- else %}
 {%- set host = grains['fqdn'] %}
+include:
+  - .python
 {%- endif %}
 
 mysql_salt_user_with_salt_user:
@@ -26,9 +28,9 @@ mysql_salt_user_with_salt_user:
     - connection_pass: '{{ mysql_salt_pass }}'
     - connection_charset: utf8
     - onlyif:
-      - mysql --user {{ mysql_salt_user }} --password='{{ mysql_salt_pass|yaml_dquote }}' -h {{ mysql_host }} --execute="SELECT 1;" 2>&1
-      - VALUE=$(mysql --user {{ mysql_salt_user }} --password='{{ mysql_salt_pass|yaml_dquote }}' -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'Y' ]; then /bin/true; else /bin/false; fi
-{%- if os_family in ['RedHat', 'Suse'] %}
+      - mysql --user {{ mysql_salt_user }} --password={{ mysql_salt_pass|yaml_dquote }} -h {{ mysql_host }} --execute="SELECT 1;" 2>&1
+      - VALUE=$(mysql --user {{ mysql_salt_user }} --password={{ mysql_salt_pass|yaml_dquote }} -h {{ mysql_host }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'Y' ]; then /bin/true; else /bin/false; fi
+{%- if os_family in ['RedHat', 'Suse'] and mysql_host == 'localhost' %}
     - require_in:
       - mysql_user: mysql_root_password
 {%- endif %}
@@ -47,11 +49,11 @@ mysql_salt_user_with_salt_user_grants:
     - connection_pass: '{{ mysql_salt_pass }}'
     - connection_charset: utf8
     - onlyif:
-      - mysql --user {{ mysql_salt_user }} --password='{{ mysql_salt_pass|yaml_dquote }}' -h {{ mysql_host }} --execute="SELECT 1;" 2>&1
-      - VALUE=$(mysql --user {{ mysql_salt_user }} --password='{{ mysql_salt_pass|yaml_dquote }}' -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'Y' ]; then /bin/true; else /bin/false; fi
+      - mysql --user {{ mysql_salt_user }} --password={{ mysql_salt_pass|yaml_dquote }} -h {{ mysql_host }} --execute="SELECT 1;" 2>&1
+      - VALUE=$(mysql --user {{ mysql_salt_user }} --password={{ mysql_salt_pass|yaml_dquote }} -h {{ mysql_host }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'Y' ]; then /bin/true; else /bin/false; fi
     - require:
       - mysql_user: mysql_salt_user_with_salt_user
-{%- if os_family in ['RedHat', 'Suse'] %}
+{%- if os_family in ['RedHat', 'Suse'] and mysql_host == 'localhost' %}
     - require_in:
       - mysql_user: mysql_root_password
 {%- endif %}
@@ -67,9 +69,9 @@ mysql_salt_user_with_root_user:
     - connection_pass: '{{ mysql_root_pass }}'
     - connection_charset: utf8
     - onlyif:
-      - mysql --user {{ mysql_root_user }} --password='{{ mysql_root_pass|yaml_dquote }}' -h {{ mysql_host }} --execute="SELECT 1;" 2>/dev/null
-      - VALUE=$(mysql --user {{ mysql_root_user }} --password='{{ mysql_root_pass|yaml_dquote }}' -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
-{%- if os_family in ['RedHat', 'Suse'] %}
+      - mysql --user {{ mysql_root_user }} --password={{ mysql_root_pass|yaml_dquote }} -h {{ mysql_host }} --execute="SELECT 1;" 2>/dev/null
+      - VALUE=$(mysql --user {{ mysql_root_user }} --password={{ mysql_root_pass|yaml_dquote }} -h {{ mysql_host }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
+{%- if os_family in ['RedHat', 'Suse'] and mysql_host == 'localhost' %}
     - require_in:
       - mysql_user: mysql_root_password
 {%- endif %}
@@ -88,11 +90,11 @@ mysql_salt_user_with_root_user_grants:
     - connection_pass: '{{ mysql_root_pass }}'
     - connection_charset: utf8
     - onlyif:
-      - mysql --user {{ mysql_root_user }} --password='{{ mysql_root_pass|yaml_dquote }}' -h {{ mysql_host }} --execute="SELECT 1;" 2>/dev/null
-      - VALUE=$(mysql --user {{ mysql_root_user }} --password='{{ mysql_root_pass|yaml_dquote }}' -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
+      - mysql --user {{ mysql_root_user }} --password={{ mysql_root_pass|yaml_dquote }} -h {{ mysql_host }} --execute="SELECT 1;" 2>/dev/null
+      - VALUE=$(mysql --user {{ mysql_root_user }} --password={{ mysql_root_pass|yaml_dquote }} -h {{ mysql_host }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
     - require:
       - mysql_user: mysql_salt_user_with_root_user
-{%- if os_family in ['RedHat', 'Suse'] %}
+{%- if os_family in ['RedHat', 'Suse'] and mysql_host == 'localhost' %}
     - require_in:
       - mysql_user: mysql_root_password
 {%- endif %}
@@ -108,8 +110,8 @@ mysql_salt_user_with_passwordless_root_user:
     - connection_charset: utf8
     - onlyif:
       - mysql --user {{ mysql_root_user }} -h {{ mysql_host }} --execute="SELECT 1;" 2>/dev/null
-      - VALUE=$(mysql --user {{ mysql_root_user }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
-{%- if os_family in ['RedHat', 'Suse'] %}
+      - VALUE=$(mysql --user {{ mysql_root_user }} -h {{ mysql_host }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
+{%- if os_family in ['RedHat', 'Suse'] and mysql_host == 'localhost' %}
     - require_in:
       - mysql_user: mysql_root_password
 {%- endif %}
@@ -128,16 +130,16 @@ mysql_salt_user_with_passwordless_root_user_grants:
     - connection_charset: utf8
     - onlyif:
       - mysql --user {{ mysql_root_user }} -h {{ mysql_host }} --execute="SELECT 1;" 2>/dev/null
-      - VALUE=$(mysql --user {{ mysql_root_user }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
+      - VALUE=$(mysql --user {{ mysql_root_user }} -h {{ mysql_host }} -ss -e "SELECT Grant_priv FROM mysql.user WHERE user = '{{ mysql_salt_user }}' AND host = '{{ host }}';" 2>/dev/null); if [ "$VALUE" = 'N' -o -z "$VALUE" ]; then /bin/true; else /bin/false; fi
     - require:
       - mysql_user: mysql_salt_user_with_passwordless_root_user
-{%- if os_family in ['RedHat', 'Suse'] %}
+{%- if os_family in ['RedHat', 'Suse'] and mysql_host == 'localhost' %}
     - require_in:
       - mysql_user: mysql_root_password
 {%- endif %}
 {%- endif %}
 
-{%- if os_family in ['RedHat', 'Suse'] %}
+{%- if os_family in ['RedHat', 'Suse'] and mysql_host == 'localhost' %}
 extend:
   mysql_root_password:
     cmd.run:
