@@ -18,6 +18,8 @@ include:
   - .python
 {%- endif %}
 
+{%- set host = salt['pillar.get']('mysql:salt_user:salt_user_host', host) %}
+
 mysql_salt_user_with_salt_user:
   mysql_user.present:
     - name: {{ mysql_salt_user }}
