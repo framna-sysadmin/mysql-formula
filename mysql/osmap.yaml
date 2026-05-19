@@ -15,6 +15,44 @@ Ubuntu:
     append: |
       !includedir /etc/mysql/conf.d/
 
+AlmaLinux:
+  aws_kms_pkg: MariaDB-aws-key-management
+  oqgraphpkg: MariaDB-oqgraph-engine
+  tokudbpkg: MariaDB-tokudb-engine
+
+  config_directory: /etc/my.cnf.d/
+
+  audit_config:
+    file: audit.cnf
+
+  auth_config:
+    file: authentication.cnf
+
+  aws_kms_config:
+    file: aws-kms.cnf
+
+  library_config:
+    file: client.cnf
+    sections:
+      client:
+        default_character_set: utf8
+
+  oqgraph_config:
+    file: oqgraph.cnf
+
+  server_config:
+    file: server.cnf
+    sections:
+      mysqld_safe:
+        log_error: /var/log/mysql/mysqld.log
+        pid_file: /var/run/mysql/mysqld.pid
+      mysqld:
+        socket: /var/lib/mysql/mysql.sock
+        bind_address: 127.0.0.1
+
+  tokudb_config:
+    file: tokudb.cnf
+
 CentOS:
   aws_kms_pkg: MariaDB-aws-key-management
   oqgraphpkg: MariaDB-oqgraph-engine
